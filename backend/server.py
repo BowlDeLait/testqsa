@@ -720,31 +720,55 @@ def compile_payload_source(source_code, config):
     """
     Compile le code source Python en exécutable binaire
     """
+    print("🔨 [DEBUG] compile_payload_source appelée")
+    print(f"📊 [DEBUG] Taille du code source: {len(source_code)} caractères")
+    print(f"⚙️ [DEBUG] Configuration: {json.dumps(config, indent=2)}")
+    
     try:
+        print("📁 [DEBUG] Création du fichier temporaire...")
         # Créer un fichier temporaire avec le code source
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as temp_file:
             temp_file.write(source_code)
             temp_file_path = temp_file.name
+        print(f"✅ [DEBUG] Fichier temporaire créé: {temp_file_path}")
         
+        print("📖 [DEBUG] Lecture du fichier pour compilation...")
         # Simulation de la compilation (dans un vrai projet, utiliser PyInstaller)
         # Pour l'exercice éducatif, on retourne le code source Python
         with open(temp_file_path, 'rb') as f:
             binary_content = f.read()
+        print(f"✅ [DEBUG] Contenu lu: {len(binary_content)} bytes")
         
+        print("🧹 [DEBUG] Nettoyage du fichier temporaire...")
         # Nettoyer le fichier temporaire
         os.unlink(temp_file_path)
+        print("✅ [DEBUG] Fichier temporaire supprimé")
         
+        print(f"🎉 [DEBUG] Compilation terminée avec succès: {len(binary_content)} bytes")
         return binary_content
         
     except Exception as e:
+        print("=" * 80)
+        print("❌ [DEBUG] ERREUR LORS DE LA COMPILATION")
+        print("=" * 80)
+        print(f"❌ [DEBUG] Type d'erreur: {type(e).__name__}")
+        print(f"❌ [DEBUG] Message d'erreur: {str(e)}")
+        import traceback
+        print(f"❌ [DEBUG] Stack trace: {traceback.format_exc()}")
+        print("=" * 80)
+        
+        print("🔄 [DEBUG] Utilisation du payload de fallback...")
         # En cas d'erreur, retourner un payload de base
         payload_content = f"""# Quasar RAT Client - Version Éducative
+# Erreur de compilation: {str(e)}
 # Configuration: {json.dumps(config, indent=2)}
 # Ce fichier contient le code source du client Quasar généré
 
 {source_code}
 """
-        return payload_content.encode('utf-8')
+        binary_content = payload_content.encode('utf-8')
+        print(f"✅ [DEBUG] Payload de fallback créé: {len(binary_content)} bytes")
+        return binary_content
 
 if __name__ == "__main__":
     import uvicorn
