@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Configuration de l'API centralisée
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '/api';
 
 console.log('🔧 Configuration API centralisée avec URL:', API_BASE_URL);
 
