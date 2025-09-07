@@ -110,13 +110,33 @@ const PayloadBuilder = () => {
       console.log("🚀 [DEBUG] Lancement de la requête POST /api/payload/generate...");
       const startTime = performance.now();
       
-      const response = await api.post('/api/payload/generate', config, {
-        timeout: 30000, // 30 seconds timeout
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          console.log(`📤 [DEBUG] Upload progress: ${percentCompleted}%`);
-        }
-      });
+      // PRE-REQUEST DEBUG
+      console.log("🔍 [DEBUG PRE-REQUEST] État avant la requête:");
+      console.log("  - Backend URL:", api.defaults.baseURL);
+      console.log("  - Request URL complète:", `${api.defaults.baseURL}/api/payload/generate`);
+      console.log("  - Navigator online:", navigator.onLine);
+      console.log("  - Timestamp:", new Date().toISOString());
+      
+      let response;
+      try {
+        console.log("📡 [DEBUG] Début appel API...");
+        response = await api.post('/api/payload/generate', config, {
+          timeout: 30000, // 30 seconds timeout
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            console.log(`📤 [DEBUG] Upload progress: ${percentCompleted}%`);
+          }
+        });
+        console.log("✅ [DEBUG] Appel API terminé avec succès");
+      } catch (apiError) {
+        console.log("❌ [DEBUG] Erreur lors de l'appel API:");
+        console.log("  - Error type:", typeof apiError);
+        console.log("  - Error constructor:", apiError.constructor.name);
+        console.log("  - Error message:", apiError.message);
+        console.log("  - Error code:", apiError.code);
+        console.log("  - Error isAxiosError:", apiError.isAxiosError);
+        throw apiError; // Re-throw pour être traité par le catch principal
+      }
       
       const endTime = performance.now();
       console.log(`⏱️ [DEBUG] Requête terminée en ${endTime - startTime}ms`);
