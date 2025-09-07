@@ -18,6 +18,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 function AppRoutes() {
   const { user, loading } = useAuth();
 
+  // 🚨 BYPASS LOGIN ACTIVÉ - Utilisateur connecté automatiquement
   console.log('🔄 AppRoutes render - user:', user, 'loading:', loading);
 
   // Forcer l'affichage après un court délai si loading reste true
