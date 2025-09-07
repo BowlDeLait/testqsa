@@ -94,33 +94,39 @@ const PayloadBuilder = () => {
         console.log('🔄 Début du téléchargement du payload...');
         
         // Télécharger le fichier généré avec timeout augmenté
-        const downloadResponse = await axios.get(`/api/payload/download/${response.data.payload_id}`, {
-          responseType: 'blob',
-          timeout: 60000, // 60 seconds timeout
-          onDownloadProgress: (progressEvent) => {
-            if (progressEvent.total) {
-              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-              console.log(`📥 Téléchargement: ${percentCompleted}%`);
+        try {
+          const downloadResponse = await axios.get(`/api/payload/download/${response.data.payload_id}`, {
+            responseType: 'blob',
+            timeout: 60000, // 60 seconds timeout
+            onDownloadProgress: (progressEvent) => {
+              if (progressEvent.total) {
+                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                console.log(`📥 Téléchargement: ${percentCompleted}%`);
+              }
             }
-          }
-        });
-        
-        console.log('📁 Fichier téléchargé, taille:', downloadResponse.data.size, 'bytes');
-        
-        // Créer le blob pour le téléchargement
-        const blob = new Blob([downloadResponse.data], { type: 'application/octet-stream' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = config.installName;
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        toast.success('Payload généré et téléchargé avec succès !', { id: 'build-progress' });
-        console.log('✅ Payload téléchargé avec succès:', config.installName);
+          });
+          
+          console.log('📁 Fichier téléchargé, taille:', downloadResponse.data.size, 'bytes');
+          
+          // Créer le blob pour le téléchargement
+          const blob = new Blob([downloadResponse.data], { type: 'application/octet-stream' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = config.installName;
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          
+          toast.success('Payload généré et téléchargé avec succès !', { id: 'build-progress' });
+          console.log('✅ Payload téléchargé avec succès:', config.installName);
+          
+        } catch (downloadError) {
+          console.error('❌ Erreur spécifique de téléchargement:', downloadError);
+          throw new Error(`Erreur de téléchargement: ${downloadError.message}`);
+        }
         
       } else {
         throw new Error(response.data.error || 'Erreur de génération du serveur');
