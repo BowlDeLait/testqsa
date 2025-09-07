@@ -155,20 +155,39 @@ const PayloadBuilder = () => {
         // Télécharger le fichier généré avec timeout augmenté
         try {
           console.log("📥 [DEBUG] Lancement de la requête de téléchargement...");
+          console.log("🔍 [DEBUG PRE-DOWNLOAD] État avant téléchargement:");
+          console.log("  - Download URL:", downloadUrl);
+          console.log("  - Full download URL:", `${api.defaults.baseURL}${downloadUrl}`);
+          console.log("  - Navigator online:", navigator.onLine);
+          console.log("  - Timestamp:", new Date().toISOString());
+          
           const downloadStartTime = performance.now();
           
-          const downloadResponse = await api.get(downloadUrl, {
-            responseType: 'blob',
-            timeout: 60000, // 60 seconds timeout
-            onDownloadProgress: (progressEvent) => {
-              if (progressEvent.total) {
-                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                console.log(`📥 [DEBUG] Téléchargement: ${percentCompleted}% (${progressEvent.loaded}/${progressEvent.total} bytes)`);
-              } else {
-                console.log(`📥 [DEBUG] Téléchargement: ${progressEvent.loaded} bytes reçus`);
+          let downloadResponse;
+          try {
+            console.log("📥 [DEBUG] Début appel téléchargement...");
+            downloadResponse = await api.get(downloadUrl, {
+              responseType: 'blob',
+              timeout: 60000, // 60 seconds timeout
+              onDownloadProgress: (progressEvent) => {
+                if (progressEvent.total) {
+                  const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                  console.log(`📥 [DEBUG] Téléchargement: ${percentCompleted}% (${progressEvent.loaded}/${progressEvent.total} bytes)`);
+                } else {
+                  console.log(`📥 [DEBUG] Téléchargement: ${progressEvent.loaded} bytes reçus`);
+                }
               }
-            }
-          });
+            });
+            console.log("✅ [DEBUG] Téléchargement API terminé avec succès");
+          } catch (downloadApiError) {
+            console.log("❌ [DEBUG] Erreur lors de l'appel API de téléchargement:");
+            console.log("  - Error type:", typeof downloadApiError);
+            console.log("  - Error constructor:", downloadApiError.constructor.name);
+            console.log("  - Error message:", downloadApiError.message);
+            console.log("  - Error code:", downloadApiError.code);
+            console.log("  - Error isAxiosError:", downloadApiError.isAxiosError);
+            throw downloadApiError; // Re-throw pour être traité par le catch principal
+          }
           
           const downloadEndTime = performance.now();
           console.log(`⏱️ [DEBUG] Téléchargement terminé en ${downloadEndTime - downloadStartTime}ms`);
