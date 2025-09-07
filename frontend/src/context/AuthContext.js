@@ -95,16 +95,20 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (username, email, password) => {
     try {
-      await axios.post('/api/auth/register', {
+      console.log('Tentative d\'inscription avec:', { username, email });
+      const response = await axios.post('/api/auth/register', {
         username,
         email,
         password,
       });
-
+      
+      console.log('Réponse inscription:', response.data);
       toast.success('Inscription réussie ! Vous pouvez maintenant vous connecter.');
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.detail || 'Erreur d\'inscription';
+      console.error('Erreur inscription:', error);
+      console.error('Détails erreur:', error.response?.data);
+      const message = error.response?.data?.detail || error.message || 'Erreur d\'inscription';
       toast.error(message);
       return { success: false, error: message };
     }
