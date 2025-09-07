@@ -49,7 +49,12 @@ export const AuthProvider = ({ children }) => {
     // Add response interceptor to handle auth errors
     const responseInterceptor = axios.interceptors.response.use(
       (response) => {
-        console.log('📥 Réponse reçue:', response.status, response.config.url);
+        // Skip logging for blob responses to avoid corrupting binary data
+        if (response.config.responseType !== 'blob') {
+          console.log('📥 Réponse reçue:', response.status, response.config.url);
+        } else {
+          console.log('📦 Fichier blob reçu:', response.status, response.config.url, `(${response.data.size} bytes)`);
+        }
         return response;
       },
       (error) => {
