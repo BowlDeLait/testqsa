@@ -68,6 +68,9 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
       console.log('🔍 Vérification de l\'authentification au démarrage...');
       
+      // Petit délai pour assurer la synchronisation de l'état React
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Pour l'instant, on va simplifier et juste passer loading à false
       // afin de permettre l'accès à la page de connexion
       console.log('✅ Chargement terminé (mode simplifié)');
