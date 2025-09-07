@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(false); // Désactiver le loading par défaut
 
-  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '/api';
 
   // Create dedicated axios instance
   const api = axios.create({
