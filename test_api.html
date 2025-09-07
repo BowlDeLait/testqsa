@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API Quasar</title>
+</head>
+<body>
+    <h1>Test API Quasar</h1>
+    
+    <div>
+        <h2>Test d'inscription</h2>
+        <button onclick="testRegister()">Tester l'inscription</button>
+        <div id="register-result"></div>
+    </div>
+    
+    <div>
+        <h2>Test de connexion</h2>
+        <button onclick="testLogin()">Tester la connexion</button>
+        <div id="login-result"></div>
+    </div>
+
+    <script>
+        async function testRegister() {
+            const resultDiv = document.getElementById('register-result');
+            resultDiv.innerHTML = 'En cours...';
+            
+            try {
+                const response = await fetch('http://localhost:8001/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'testhtml',
+                        email: 'testhtml@example.com',
+                        password: 'testpass123'
+                    })
+                });
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `<p style="color: green;">Succès: ${JSON.stringify(data)}</p>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Erreur: ${error.message}</p>`;
+            }
+        }
+        
+        async function testLogin() {
+            const resultDiv = document.getElementById('login-result');
+            resultDiv.innerHTML = 'En cours...';
+            
+            try {
+                const response = await fetch('http://localhost:8001/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `<p style="color: green;">Succès: ${JSON.stringify(data)}</p>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Erreur: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
