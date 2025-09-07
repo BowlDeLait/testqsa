@@ -185,35 +185,69 @@ const PayloadBuilder = () => {
           console.log("=" * 80);
           
         } catch (downloadError) {
-          console.error('❌ Erreur spécifique de téléchargement:', downloadError);
+          console.log("=" * 80);
+          console.log("❌ [DEBUG FRONTEND] ERREUR DE TÉLÉCHARGEMENT");
+          console.log("=" * 80);
+          console.error('❌ [DEBUG] Erreur spécifique de téléchargement:', downloadError);
+          console.error('❌ [DEBUG] Type d\'erreur:', downloadError.name);
+          console.error('❌ [DEBUG] Message:', downloadError.message);
+          console.error('❌ [DEBUG] Code d\'erreur:', downloadError.code);
+          console.error('❌ [DEBUG] Status HTTP:', downloadError.response?.status);
+          console.error('❌ [DEBUG] Data de réponse:', downloadError.response?.data);
+          console.error('❌ [DEBUG] Headers de réponse:', downloadError.response?.headers);
+          console.error('❌ [DEBUG] Config de requête:', downloadError.config);
+          console.log("=" * 80);
           throw new Error(`Erreur de téléchargement: ${downloadError.message}`);
         }
         
       } else {
+        console.log("❌ [DEBUG] Échec de génération côté serveur");
+        console.log("❌ [DEBUG] Détails de l'erreur:", response.data);
         throw new Error(response.data.error || 'Erreur de génération du serveur');
       }
 
     } catch (error) {
-      console.error('❌ Erreur complète lors de la génération:', error);
-      console.error('❌ Stack trace:', error.stack);
-      console.error('❌ Response data:', error.response?.data);
+      console.log("=" * 80);
+      console.log("❌ [DEBUG FRONTEND] ERREUR COMPLÈTE LORS DE LA GÉNÉRATION");
+      console.log("=" * 80);
+      console.error('❌ [DEBUG] Erreur complète lors de la génération:', error);
+      console.error('❌ [DEBUG] Type d\'erreur:', error.constructor.name);
+      console.error('❌ [DEBUG] Message d\'erreur:', error.message);
+      console.error('❌ [DEBUG] Stack trace:', error.stack);
+      console.error('❌ [DEBUG] Code d\'erreur:', error.code);
+      console.error('❌ [DEBUG] Timeout:', error.timeout);
+      console.error('❌ [DEBUG] Response status:', error.response?.status);
+      console.error('❌ [DEBUG] Response data:', error.response?.data);
+      console.error('❌ [DEBUG] Response headers:', error.response?.headers);
+      console.error('❌ [DEBUG] Request config:', error.config);
+      console.error('❌ [DEBUG] Request URL:', error.config?.url);
+      console.error('❌ [DEBUG] Request method:', error.config?.method);
+      console.error('❌ [DEBUG] Request data:', error.config?.data);
+      console.log("=" * 80);
       
       let errorMsg = 'Erreur de génération du payload';
       
       if (error.code === 'ECONNABORTED') {
+        console.log("⏰ [DEBUG] Erreur de timeout détectée");
         errorMsg = 'Timeout - La génération a pris trop de temps';
-      } else if (error.code === 'NETWORK_ERROR') {
+      } else if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
+        console.log("🌐 [DEBUG] Erreur réseau détectée");
         errorMsg = 'Erreur réseau - Vérifiez votre connexion';
       } else if (error.response?.data?.detail) {
+        console.log("📝 [DEBUG] Erreur avec détail du serveur");
         errorMsg = error.response.data.detail;
       } else if (error.message) {
+        console.log("📝 [DEBUG] Erreur avec message standard");
         errorMsg = error.message;
       }
       
+      console.log("🔔 [DEBUG] Message d'erreur final:", errorMsg);
       toast.error(`Erreur: ${errorMsg}`, { id: 'build-progress' });
     } finally {
+      console.log("🏁 [DEBUG] Nettoyage final...");
       setBuilding(false);
       setBuildProgress(0);
+      console.log("✅ [DEBUG] États réinitialisés");
     }
   };
 
