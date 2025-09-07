@@ -95,7 +95,7 @@ const PayloadBuilder = () => {
         
         // Télécharger le fichier généré avec timeout augmenté
         try {
-          const downloadResponse = await axios.get(`/api/payload/download/${response.data.payload_id}`, {
+          const downloadResponse = await api.get(`/api/payload/download/${response.data.payload_id}`, {
             responseType: 'blob',
             timeout: 60000, // 60 seconds timeout
             onDownloadProgress: (progressEvent) => {
