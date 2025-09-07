@@ -63,38 +63,53 @@ const PayloadBuilder = () => {
     setBuildProgress(0);
 
     try {
-      // Simulation du processus de build
+      // Étapes de génération réalistes
       const steps = [
-        'Préparation de la configuration...',
-        'Compilation du client...',
-        'Application des paramètres...',
-        'Génération du payload...',
-        'Finalisation...'
+        'Validation de la configuration...',
+        'Compilation du stub client...',
+        'Injection des paramètres de connexion...',
+        'Configuration des fonctionnalités...',
+        'Génération du payload final...',
+        'Signature et compression...'
       ];
 
       for (let i = 0; i < steps.length; i++) {
         toast.loading(steps[i], { id: 'build-progress' });
-        setBuildProgress((i + 1) * 20);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        setBuildProgress(((i + 1) / steps.length) * 100);
+        await new Promise(resolve => setTimeout(resolve, 800));
       }
 
-      // Ici on appellerait l'API pour générer le payload réel
-      toast.success('Payload généré avec succès !', { id: 'build-progress' });
+      // Appel à l'API backend pour générer le payload réel
+      console.log('🔧 Envoi de la configuration au backend...');
+      const response = await axios.post('/api/payload/generate', config);
       
-      // Simuler le téléchargement
-      const blob = new Blob(['Contenu du payload simulé'], { type: 'application/octet-stream' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = config.installName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      if (response.data.success) {
+        toast.success('Payload généré avec succès !', { id: 'build-progress' });
+        
+        // Télécharger le fichier généré
+        const downloadResponse = await axios.get(`/api/payload/download/${response.data.payload_id}`, {
+          responseType: 'blob'
+        });
+        
+        const blob = new Blob([downloadResponse.data], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = config.installName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        console.log('✅ Payload téléchargé avec succès');
+      } else {
+        throw new Error(response.data.error || 'Erreur de génération');
+      }
 
     } catch (error) {
-      toast.error('Erreur lors de la génération du payload');
-      console.error(error);
+      console.error('❌ Erreur lors de la génération:', error);
+      const errorMsg = error.response?.data?.detail || error.message || 'Erreur de génération du payload';
+      toast.error(`Erreur: ${errorMsg}`, { id: 'build-progress' });
     } finally {
       setBuilding(false);
       setBuildProgress(0);
