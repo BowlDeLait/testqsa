@@ -18,7 +18,22 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 function AppRoutes() {
   const { user, loading } = useAuth();
 
-  if (loading) {
+  console.log('🔄 AppRoutes render - user:', user, 'loading:', loading);
+
+  // Forcer l'affichage après un court délai si loading reste true
+  const [forceRender, setForceRender] = useState(false);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log('⏰ Timer expired, forcing render');
+      setForceRender(true);
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading && !forceRender) {
+    console.log('📱 Showing loading screen');
     return (
       <div className="min-h-screen bg-discord-darkest flex items-center justify-center">
         <div className="text-center">
@@ -29,6 +44,7 @@ function AppRoutes() {
     );
   }
 
+  console.log('📱 Showing main app interface');
   return (
     <div className="min-h-screen bg-discord-darkest">
       <Routes>
