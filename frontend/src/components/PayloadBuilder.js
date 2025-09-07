@@ -65,6 +65,13 @@ const PayloadBuilder = () => {
     console.log("⚙️ [DEBUG] Configuration actuelle:", JSON.stringify(config, null, 2));
     console.log("🌐 [DEBUG] URL backend:", process.env.REACT_APP_BACKEND_URL);
     console.log("🕐 [DEBUG] Timestamp:", new Date().toISOString());
+    console.log("🔍 [DEBUG] Variables d'environnement React:");
+    console.log("  - REACT_APP_BACKEND_URL:", process.env.REACT_APP_BACKEND_URL);
+    console.log("  - NODE_ENV:", process.env.NODE_ENV);
+    console.log("🌐 [DEBUG] État du navigator:");
+    console.log("  - navigator.onLine:", navigator.onLine);
+    console.log("  - navigator.connection:", navigator.connection);
+    console.log("  - window.location.origin:", window.location.origin);
 
     setBuilding(true);
     setBuildProgress(0);
