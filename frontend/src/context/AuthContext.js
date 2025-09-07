@@ -66,17 +66,24 @@ export const AuthProvider = ({ children }) => {
   // Check for existing token on app load
   useEffect(() => {
     const checkAuth = async () => {
+      console.log('🔍 Vérification de l\'authentification au démarrage...');
       const token = localStorage.getItem('token');
       if (token) {
+        console.log('🎫 Token trouvé dans localStorage, vérification...');
         try {
           const response = await axios.get('/api/auth/me');
+          console.log('✅ Token valide, utilisateur:', response.data);
           setUser(response.data);
         } catch (error) {
+          console.error('❌ Token invalide, suppression:', error);
           localStorage.removeItem('token');
           setUser(null);
         }
+      } else {
+        console.log('🚫 Aucun token trouvé');
       }
       setLoading(false);
+      console.log('✅ Vérification d\'authentification terminée');
     };
 
     checkAuth();
