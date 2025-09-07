@@ -23,11 +23,20 @@ export const AuthProvider = ({ children }) => {
 
   const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
-  // Configure axios defaults
+  // Create dedicated axios instance
+  const api = axios.create({
+    baseURL: API_BASE_URL,
+    timeout: 60000
+  });
+
+  // Configure axios defaults and create global instance
   useEffect(() => {
     console.log('🔧 Configuration axios avec API_BASE_URL:', API_BASE_URL);
     axios.defaults.baseURL = API_BASE_URL;
     axios.defaults.timeout = 60000; // 60 seconds timeout par défaut
+    
+    // Make api instance globally available
+    window.apiInstance = api;
     
     // Add request interceptor to include token
     const requestInterceptor = axios.interceptors.request.use(
