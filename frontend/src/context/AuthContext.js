@@ -71,11 +71,19 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         console.log('🎫 Token trouvé dans localStorage, vérification...');
         try {
-          const response = await axios.get('/api/auth/me');
+          // Ajout d'un timeout pour éviter le blocage
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
+          
+          const response = await axios.get('/api/auth/me', {
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+          
           console.log('✅ Token valide, utilisateur:', response.data);
           setUser(response.data);
         } catch (error) {
-          console.error('❌ Token invalide, suppression:', error);
+          console.error('❌ Token invalide ou timeout, suppression:', error);
           localStorage.removeItem('token');
           setUser(null);
         }
@@ -86,7 +94,15 @@ export const AuthProvider = ({ children }) => {
       console.log('✅ Vérification d\'authentification terminée');
     };
 
-    checkAuth();
+    // Ajouter un timeout de sécurité au cas où checkAuth se bloque
+    const safetyTimeout = setTimeout(() => {
+      console.warn('⚠️ Timeout de sécurité - forcer la fin du loading');
+      setLoading(false);
+    }, 10000);
+
+    checkAuth().finally(() => {
+      clearTimeout(safetyTimeout);
+    });
   }, []);
 
   const login = async (username, password) => {
