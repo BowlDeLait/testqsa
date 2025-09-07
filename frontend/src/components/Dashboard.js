@@ -15,7 +15,7 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
-import axios from 'axios';
+import api from '../utils/api';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
