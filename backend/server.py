@@ -253,18 +253,33 @@ async def generate_payload(payload_config: dict):
     Génère un payload Quasar fonctionnel avec la configuration fournie
     Note: Endpoint sans authentification pour l'exercice éducatif
     """
+    print("=" * 80)
+    print("🚀 [DEBUG] DÉBUT GÉNÉRATION PAYLOAD")
+    print("=" * 80)
+    print(f"📥 [DEBUG] Configuration reçue: {json.dumps(payload_config, indent=2)}")
+    print(f"🕐 [DEBUG] Timestamp: {datetime.utcnow()}")
+    print(f"🌐 [DEBUG] Headers disponibles: request headers would be here")
+    
     try:
+        print("👤 [DEBUG] Création utilisateur bypass...")
         # Pour le bypass temporaire, créer un utilisateur fictif
         current_user = {"_id": "bypass-user", "username": "admin-bypass"}
+        print(f"✅ [DEBUG] Utilisateur bypass créé: {current_user}")
         
+        print("🔍 [DEBUG] Validation des champs requis...")
         # Validation de la configuration
         required_fields = ['host', 'port', 'password']
         for field in required_fields:
+            print(f"🔍 [DEBUG] Vérification champ '{field}': {payload_config.get(field)}")
             if not payload_config.get(field):
+                print(f"❌ [DEBUG] Champ manquant: {field}")
                 raise HTTPException(status_code=400, detail=f"Le champ '{field}' est requis")
+        print("✅ [DEBUG] Validation des champs requis réussie")
         
+        print("🆔 [DEBUG] Génération ID unique...")
         # ID unique pour le payload
         payload_id = str(uuid.uuid4())
+        print(f"✅ [DEBUG] ID généré: {payload_id}")
         
         # Configuration du payload
         config = {
