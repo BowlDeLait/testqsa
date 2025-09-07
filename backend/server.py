@@ -21,13 +21,14 @@ load_dotenv()
 
 app = FastAPI(title="Quasar Web Interface", version="1.0.0")
 
-# CORS Configuration
+# CORS Configuration - Permissive pour environnement de développement
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # Database Configuration
