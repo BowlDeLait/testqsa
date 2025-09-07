@@ -81,34 +81,68 @@ const PayloadBuilder = () => {
 
       // Appel à l'API backend pour générer le payload réel
       console.log('🔧 Envoi de la configuration au backend...');
-      const response = await axios.post('/api/payload/generate', config);
+      toast.loading('Génération du payload sur le serveur...', { id: 'build-progress' });
+      
+      const response = await axios.post('/api/payload/generate', config, {
+        timeout: 30000 // 30 seconds timeout
+      });
+      
+      console.log('📦 Réponse du serveur:', response.data);
       
       if (response.data.success) {
-        toast.success('Payload généré avec succès !', { id: 'build-progress' });
+        toast.loading('Téléchargement du payload...', { id: 'build-progress' });
+        console.log('🔄 Début du téléchargement du payload...');
         
-        // Télécharger le fichier généré
+        // Télécharger le fichier généré avec timeout augmenté
         const downloadResponse = await axios.get(`/api/payload/download/${response.data.payload_id}`, {
-          responseType: 'blob'
+          responseType: 'blob',
+          timeout: 60000, // 60 seconds timeout
+          onDownloadProgress: (progressEvent) => {
+            if (progressEvent.total) {
+              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              console.log(`📥 Téléchargement: ${percentCompleted}%`);
+            }
+          }
         });
         
+        console.log('📁 Fichier téléchargé, taille:', downloadResponse.data.size, 'bytes');
+        
+        // Créer le blob pour le téléchargement
         const blob = new Blob([downloadResponse.data], { type: 'application/octet-stream' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = config.installName;
+        a.style.display = 'none';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
-        console.log('✅ Payload téléchargé avec succès');
+        toast.success('Payload généré et téléchargé avec succès !', { id: 'build-progress' });
+        console.log('✅ Payload téléchargé avec succès:', config.installName);
+        
       } else {
-        throw new Error(response.data.error || 'Erreur de génération');
+        throw new Error(response.data.error || 'Erreur de génération du serveur');
       }
 
     } catch (error) {
-      console.error('❌ Erreur lors de la génération:', error);
-      const errorMsg = error.response?.data?.detail || error.message || 'Erreur de génération du payload';
+      console.error('❌ Erreur complète lors de la génération:', error);
+      console.error('❌ Stack trace:', error.stack);
+      console.error('❌ Response data:', error.response?.data);
+      
+      let errorMsg = 'Erreur de génération du payload';
+      
+      if (error.code === 'ECONNABORTED') {
+        errorMsg = 'Timeout - La génération a pris trop de temps';
+      } else if (error.code === 'NETWORK_ERROR') {
+        errorMsg = 'Erreur réseau - Vérifiez votre connexion';
+      } else if (error.response?.data?.detail) {
+        errorMsg = error.response.data.detail;
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
       toast.error(`Erreur: ${errorMsg}`, { id: 'build-progress' });
     } finally {
       setBuilding(false);
