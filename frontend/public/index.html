@@ -106,17 +106,28 @@
     
     <script>
       // Hide loading screen when React app loads
+      function hideLoadingScreen() {
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+          loadingScreen.classList.add('fade-out');
+          setTimeout(function() {
+            loadingScreen.style.display = 'none';
+          }, 500);
+        }
+      }
+      
+      // Try multiple events to ensure loading screen is hidden
       window.addEventListener('load', function() {
-        setTimeout(function() {
-          const loadingScreen = document.getElementById('loading-screen');
-          if (loadingScreen) {
-            loadingScreen.classList.add('fade-out');
-            setTimeout(function() {
-              loadingScreen.style.display = 'none';
-            }, 500);
-          }
-        }, 1000); // Show loading for at least 1 second
+        setTimeout(hideLoadingScreen, 2000);
       });
+      
+      // Also try when DOM is ready
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(hideLoadingScreen, 3000);
+      });
+      
+      // Fallback: always hide after 5 seconds
+      setTimeout(hideLoadingScreen, 5000);
     </script>
   </body>
 </html>
