@@ -13,7 +13,12 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  // BYPASS TEMPORAIRE DU LOGIN - UTILISATEUR FICTIF AUTO-CONNECTÉ
+  const [user, setUser] = useState({
+    id: "temp-user-bypass",
+    username: "admin-bypass",
+    email: "admin@quasar.local"
+  });
   const [loading, setLoading] = useState(false); // Désactiver le loading par défaut
 
   const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
