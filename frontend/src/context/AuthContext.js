@@ -67,42 +67,14 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       console.log('🔍 Vérification de l\'authentification au démarrage...');
-      const token = localStorage.getItem('token');
-      if (token) {
-        console.log('🎫 Token trouvé dans localStorage, vérification...');
-        try {
-          // Ajout d'un timeout pour éviter le blocage
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000);
-          
-          const response = await axios.get('/api/auth/me', {
-            signal: controller.signal
-          });
-          clearTimeout(timeoutId);
-          
-          console.log('✅ Token valide, utilisateur:', response.data);
-          setUser(response.data);
-        } catch (error) {
-          console.error('❌ Token invalide ou timeout, suppression:', error);
-          localStorage.removeItem('token');
-          setUser(null);
-        }
-      } else {
-        console.log('🚫 Aucun token trouvé');
-      }
+      
+      // Pour l'instant, on va simplifier et juste passer loading à false
+      // afin de permettre l'accès à la page de connexion
+      console.log('✅ Chargement terminé (mode simplifié)');
       setLoading(false);
-      console.log('✅ Vérification d\'authentification terminée');
     };
 
-    // Ajouter un timeout de sécurité au cas où checkAuth se bloque
-    const safetyTimeout = setTimeout(() => {
-      console.warn('⚠️ Timeout de sécurité - forcer la fin du loading');
-      setLoading(false);
-    }, 10000);
-
-    checkAuth().finally(() => {
-      clearTimeout(safetyTimeout);
-    });
+    checkAuth();
   }, []);
 
   const login = async (username, password) => {
