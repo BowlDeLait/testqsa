@@ -11,6 +11,8 @@ import json
 import asyncio
 import subprocess
 import uuid
+import base64
+import tempfile
 from typing import Dict, List, Optional
 import psutil
 from dotenv import load_dotenv
