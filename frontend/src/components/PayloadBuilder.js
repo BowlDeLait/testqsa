@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Package, Download, Settings, Shield, Zap, AlertTriangle, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 const PayloadBuilder = () => {
   const [config, setConfig] = useState({
@@ -27,13 +28,14 @@ const PayloadBuilder = () => {
   const [building, setBuilding] = useState(false);
   const [buildProgress, setBuildProgress] = useState(0);
 
-  const handleInputChange = (e) => {
+  // Utiliser useCallback pour éviter les re-renders inutiles
+  const handleInputChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
     setConfig(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-  };
+  }, []);
 
   const validateConfig = () => {
     if (!config.host || !config.port || !config.password) {
