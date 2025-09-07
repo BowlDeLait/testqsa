@@ -27,6 +27,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     console.log('🔧 Configuration axios avec API_BASE_URL:', API_BASE_URL);
     axios.defaults.baseURL = API_BASE_URL;
+    axios.defaults.timeout = 60000; // 60 seconds timeout par défaut
     
     // Add request interceptor to include token
     const requestInterceptor = axios.interceptors.request.use(
