@@ -77,9 +77,9 @@ export const AuthProvider = ({ children }) => {
       (response) => {
         // Skip logging for blob responses to avoid corrupting binary data
         if (response.config.responseType !== 'blob') {
-          console.log('📥 Réponse reçue:', response.status, response.config.url);
+          console.log('📥 Réponse reçue axios global:', response.status, response.config.url);
         } else {
-          console.log('📦 Fichier blob reçu:', response.status, response.config.url, `(${response.data.size} bytes)`);
+          console.log('📦 Fichier blob reçu axios global:', response.status, response.config.url, `(${response.data.size} bytes)`);
         }
         return response;
       },
@@ -94,9 +94,32 @@ export const AuthProvider = ({ children }) => {
       }
     );
 
+    const apiResponseInterceptor = api.interceptors.response.use(
+      (response) => {
+        // Skip logging for blob responses to avoid corrupting binary data
+        if (response.config.responseType !== 'blob') {
+          console.log('📥 Réponse reçue API instance:', response.status, response.config.url);
+        } else {
+          console.log('📦 Fichier blob reçu API instance:', response.status, response.config.url, `(${response.data.size} bytes)`);
+        }
+        return response;
+      },
+      (error) => {
+        console.error('❌ Erreur intercepteur API response:', error);
+        if (error.response?.status === 401) {
+          localStorage.removeItem('token');
+          setUser(null);
+          toast.error('Session expirée, veuillez vous reconnecter');
+        }
+        return Promise.reject(error);
+      }
+    );
+
     return () => {
       axios.interceptors.request.eject(requestInterceptor);
       axios.interceptors.response.eject(responseInterceptor);
+      api.interceptors.request.eject(apiRequestInterceptor);
+      api.interceptors.response.eject(apiResponseInterceptor);
     };
   }, [API_BASE_URL]);
 
