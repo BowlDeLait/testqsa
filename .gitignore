@@ -201,4 +201,7 @@ FakesAssemblies/
 *.plg
 
 # Visual Studio 6 workspace options file
-*.opt
+*.opt-e 
+# Environment files
+*.env
+*.env.*
