@@ -385,21 +385,64 @@ async def download_payload(payload_id: str):
     """
     from fastapi.responses import Response
     
-    # Récupérer le payload de la base
-    payload = db.payloads.find_one({"_id": payload_id})
-    if not payload:
-        raise HTTPException(status_code=404, detail="Payload non trouvé")
+    print("=" * 80)
+    print("📥 [DEBUG] DÉBUT TÉLÉCHARGEMENT PAYLOAD")
+    print("=" * 80)
+    print(f"🆔 [DEBUG] Payload ID demandé: {payload_id}")
+    print(f"🕐 [DEBUG] Timestamp: {datetime.utcnow()}")
     
-    # Générer le fichier binaire
-    binary_content = compile_payload_source(payload['source_code'], payload['config'])
-    
-    return Response(
-        content=binary_content,
-        media_type='application/octet-stream',
-        headers={
-            'Content-Disposition': f'attachment; filename="{payload["filename"]}"'
+    try:
+        print("🔍 [DEBUG] Recherche du payload en base...")
+        # Récupérer le payload de la base
+        payload = db.payloads.find_one({"_id": payload_id})
+        if not payload:
+            print(f"❌ [DEBUG] Payload non trouvé pour ID: {payload_id}")
+            print("🔍 [DEBUG] Recherche de tous les payloads en base...")
+            all_payloads = list(db.payloads.find({}, {"_id": 1, "filename": 1, "created_at": 1}))
+            print(f"📊 [DEBUG] Payloads trouvés en base: {len(all_payloads)}")
+            for p in all_payloads:
+                print(f"  - {p.get('_id')} | {p.get('filename')} | {p.get('created_at')}")
+            raise HTTPException(status_code=404, detail="Payload non trouvé")
+        
+        print(f"✅ [DEBUG] Payload trouvé: {payload.get('filename')}")
+        print(f"📊 [DEBUG] Taille du code source: {len(payload.get('source_code', ''))}")
+        print(f"⚙️ [DEBUG] Configuration: {json.dumps(payload.get('config', {}), indent=2)}")
+        
+        print("🔨 [DEBUG] Compilation du payload...")
+        # Générer le fichier binaire
+        binary_content = compile_payload_source(payload['source_code'], payload['config'])
+        print(f"✅ [DEBUG] Compilation terminée, taille: {len(binary_content)} bytes")
+        
+        print("📤 [DEBUG] Préparation de la réponse HTTP...")
+        headers = {
+            'Content-Disposition': f'attachment; filename="{payload["filename"]}"',
+            'Content-Type': 'application/octet-stream',
+            'Content-Length': str(len(binary_content))
         }
-    )
+        print(f"📋 [DEBUG] Headers de réponse: {headers}")
+        
+        print("=" * 80)
+        print("✅ [DEBUG] FIN TÉLÉCHARGEMENT - SUCCÈS")
+        print("=" * 80)
+        
+        return Response(
+            content=binary_content,
+            media_type='application/octet-stream',
+            headers=headers
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print("=" * 80)
+        print("❌ [DEBUG] ERREUR LORS DU TÉLÉCHARGEMENT")
+        print("=" * 80)
+        print(f"❌ [DEBUG] Type d'erreur: {type(e).__name__}")
+        print(f"❌ [DEBUG] Message d'erreur: {str(e)}")
+        import traceback
+        print(f"❌ [DEBUG] Stack trace: {traceback.format_exc()}")
+        print("=" * 80)
+        raise HTTPException(status_code=500, detail=f"Erreur lors du téléchargement: {str(e)}")
 
 def generate_payload_source(config):
     """
