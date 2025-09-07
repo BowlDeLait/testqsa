@@ -83,7 +83,7 @@ const PayloadBuilder = () => {
       console.log('🔧 Envoi de la configuration au backend...');
       toast.loading('Génération du payload sur le serveur...', { id: 'build-progress' });
       
-      const response = await axios.post('/api/payload/generate', config, {
+      const response = await api.post('/api/payload/generate', config, {
         timeout: 30000 // 30 seconds timeout
       });
       
