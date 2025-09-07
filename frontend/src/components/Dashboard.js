@@ -31,7 +31,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await axios.get('/api/dashboard/stats');
+        const response = await api.get('/api/dashboard/stats');
         setStats(response.data);
       } catch (error) {
         console.error('Erreur lors du chargement des statistiques:', error);
