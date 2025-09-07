@@ -11,7 +11,7 @@ import {
   Zap,
   Shield,
   Clock,
-  Globe,
+  Terminal,
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
