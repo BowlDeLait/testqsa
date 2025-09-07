@@ -58,21 +58,21 @@ export const AuthProvider = ({ children }) => {
     // Add interceptor to dedicated api instance
     const apiRequestInterceptor = api.interceptors.request.use(
       (config) => {
-        console.log('📤 Envoi de requête:', config.method?.toUpperCase(), config.url);
+        console.log('📤 Envoi de requête API instance:', config.method?.toUpperCase(), config.url);
         const token = localStorage.getItem('token');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
-          console.log('🔑 Token ajouté à la requête');
+          console.log('🔑 Token ajouté à la requête API');
         }
         return config;
       },
       (error) => {
-        console.error('❌ Erreur intercepteur request:', error);
+        console.error('❌ Erreur intercepteur API request:', error);
         return Promise.reject(error);
       }
     );
 
-    // Add response interceptor to handle auth errors
+    // Add response interceptors to both instances
     const responseInterceptor = axios.interceptors.response.use(
       (response) => {
         // Skip logging for blob responses to avoid corrupting binary data
