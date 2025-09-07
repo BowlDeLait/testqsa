@@ -76,19 +76,32 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
+      console.log('🔑 Tentative de connexion...', { username, baseURL: API_BASE_URL });
+      
       const response = await axios.post('/api/auth/login', {
         username,
         password,
       });
 
+      console.log('✅ Réponse du serveur:', response.data);
+      
       const { access_token, user: userData } = response.data;
       localStorage.setItem('token', access_token);
       setUser(userData);
       toast.success('Connexion réussie !');
+      console.log('✅ Connexion réussie, utilisateur défini:', userData);
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.detail || 'Erreur de connexion';
-      toast.error(message);
+      console.error('❌ Erreur de connexion:', error);
+      console.error('❌ Détails de l\'erreur:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        config: error.config
+      });
+      
+      const message = error.response?.data?.detail || error.message || 'Erreur de connexion';
+      toast.error(`Erreur: ${message}`);
       return { success: false, error: message };
     }
   };
