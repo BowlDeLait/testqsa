@@ -118,38 +118,71 @@ const PayloadBuilder = () => {
       console.log('📦 [DEBUG] Réponse complète du serveur:', JSON.stringify(response.data, null, 2));
       
       if (response.data.success) {
+        console.log("✅ [DEBUG] Génération réussie, début du téléchargement...");
         toast.loading('Téléchargement du payload...', { id: 'build-progress' });
-        console.log('🔄 Début du téléchargement du payload...');
+        console.log('🔄 [DEBUG] Début du téléchargement du payload...');
+        
+        const downloadUrl = `/api/payload/download/${response.data.payload_id}`;
+        console.log("🌐 [DEBUG] URL de téléchargement:", downloadUrl);
         
         // Télécharger le fichier généré avec timeout augmenté
         try {
-          const downloadResponse = await api.get(`/api/payload/download/${response.data.payload_id}`, {
+          console.log("📥 [DEBUG] Lancement de la requête de téléchargement...");
+          const downloadStartTime = performance.now();
+          
+          const downloadResponse = await api.get(downloadUrl, {
             responseType: 'blob',
             timeout: 60000, // 60 seconds timeout
             onDownloadProgress: (progressEvent) => {
               if (progressEvent.total) {
                 const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                console.log(`📥 Téléchargement: ${percentCompleted}%`);
+                console.log(`📥 [DEBUG] Téléchargement: ${percentCompleted}% (${progressEvent.loaded}/${progressEvent.total} bytes)`);
+              } else {
+                console.log(`📥 [DEBUG] Téléchargement: ${progressEvent.loaded} bytes reçus`);
               }
             }
           });
           
-          console.log('📁 Fichier téléchargé, taille:', downloadResponse.data.size, 'bytes');
+          const downloadEndTime = performance.now();
+          console.log(`⏱️ [DEBUG] Téléchargement terminé en ${downloadEndTime - downloadStartTime}ms`);
+          console.log("📥 [DEBUG] Status de téléchargement:", downloadResponse.status);
+          console.log("📥 [DEBUG] Headers de téléchargement:", downloadResponse.headers);
+          console.log('📁 [DEBUG] Fichier téléchargé, taille:', downloadResponse.data.size, 'bytes');
+          console.log('📁 [DEBUG] Type de contenu:', downloadResponse.headers['content-type']);
+          
+          if (!downloadResponse.data || downloadResponse.data.size === 0) {
+            throw new Error("Fichier vide reçu du serveur");
+          }
           
           // Créer le blob pour le téléchargement
+          console.log("💾 [DEBUG] Création du blob pour téléchargement...");
           const blob = new Blob([downloadResponse.data], { type: 'application/octet-stream' });
+          console.log("✅ [DEBUG] Blob créé, taille:", blob.size);
+          
           const url = URL.createObjectURL(blob);
+          console.log("🔗 [DEBUG] URL d'objet créée:", url);
+          
           const a = document.createElement('a');
           a.href = url;
           a.download = config.installName;
           a.style.display = 'none';
+          console.log("🔗 [DEBUG] Élément <a> créé:", { href: a.href, download: a.download });
+          
           document.body.appendChild(a);
+          console.log("📎 [DEBUG] Élément ajouté au DOM");
+          
           a.click();
+          console.log("🖱️ [DEBUG] Clic simulé pour téléchargement");
+          
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
+          console.log("🧹 [DEBUG] Nettoyage DOM et URL effectué");
           
           toast.success('Payload généré et téléchargé avec succès !', { id: 'build-progress' });
-          console.log('✅ Payload téléchargé avec succès:', config.installName);
+          console.log('✅ [DEBUG] Payload téléchargé avec succès:', config.installName);
+          console.log("=" * 80);
+          console.log("🎉 [DEBUG FRONTEND] FIN GÉNÉRATION PAYLOAD - SUCCÈS");
+          console.log("=" * 80);
           
         } catch (downloadError) {
           console.error('❌ Erreur spécifique de téléchargement:', downloadError);
