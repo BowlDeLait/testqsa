@@ -223,26 +223,90 @@ const PayloadBuilder = () => {
       console.error('❌ [DEBUG] Request URL:', error.config?.url);
       console.error('❌ [DEBUG] Request method:', error.config?.method);
       console.error('❌ [DEBUG] Request data:', error.config?.data);
+      
+      // NOUVELLES LIGNES DE DEBUG DÉTAILLÉES
+      console.log("🔍 [DEBUG DÉTAILLÉ] Analyse complète de l'erreur:");
+      console.log("  - Error name:", error.name);
+      console.log("  - Error toString():", error.toString());
+      console.log("  - Error isAxiosError:", error.isAxiosError);
+      console.log("  - Error cause:", error.cause);
+      console.log("  - Error errno:", error.errno);
+      console.log("  - Error syscall:", error.syscall);
+      console.log("  - Error hostname:", error.hostname);
+      console.log("  - Error port:", error.port);
+      console.log("  - Error address:", error.address);
+      
+      if (error.request) {
+        console.log("🌐 [DEBUG REQUEST] Détails de la requête:");
+        console.log("  - Request readyState:", error.request.readyState);
+        console.log("  - Request status:", error.request.status);
+        console.log("  - Request statusText:", error.request.statusText);
+        console.log("  - Request responseURL:", error.request.responseURL);
+        console.log("  - Request timeout:", error.request.timeout);
+      }
+      
+      if (error.response) {
+        console.log("📥 [DEBUG RESPONSE] Détails de la réponse:");
+        console.log("  - Response config:", error.response.config);
+        console.log("  - Response request:", error.response.request);
+        console.log("  - Response statusText:", error.response.statusText);
+      }
+      
+      console.log("🔍 [DEBUG CONDITIONS] Tests de condition d'erreur:");
+      console.log("  - error.code === 'ECONNABORTED':", error.code === 'ECONNABORTED');
+      console.log("  - error.code === 'NETWORK_ERROR':", error.code === 'NETWORK_ERROR');
+      console.log("  - error.message.includes('Network Error'):", error.message.includes('Network Error'));
+      console.log("  - error.message.includes('network error'):", error.message.includes('network error'));
+      console.log("  - error.message.toLowerCase():", error.message.toLowerCase());
       console.log("=" * 80);
       
       let errorMsg = 'Erreur de génération du payload';
+      let debugReason = 'Erreur inconnue';
       
       if (error.code === 'ECONNABORTED') {
         console.log("⏰ [DEBUG] Erreur de timeout détectée");
         errorMsg = 'Timeout - La génération a pris trop de temps';
-      } else if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
+        debugReason = 'TIMEOUT (ECONNABORTED)';
+      } else if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error') || error.message.includes('network error')) {
         console.log("🌐 [DEBUG] Erreur réseau détectée");
         errorMsg = 'Erreur réseau - Vérifiez votre connexion';
+        debugReason = 'NETWORK_ERROR ou "Network Error" dans message';
+      } else if (error.code === 'ENOTFOUND') {
+        console.log("🔍 [DEBUG] Erreur DNS détectée");
+        errorMsg = 'Erreur DNS - Impossible de résoudre l\'hôte';
+        debugReason = 'DNS_ERROR (ENOTFOUND)';
+      } else if (error.code === 'ECONNREFUSED') {
+        console.log("🚫 [DEBUG] Connexion refusée détectée");
+        errorMsg = 'Connexion refusée - Serveur indisponible';
+        debugReason = 'CONNECTION_REFUSED (ECONNREFUSED)';
+      } else if (error.response?.status >= 500) {
+        console.log("🔧 [DEBUG] Erreur serveur détectée");
+        errorMsg = `Erreur serveur (${error.response.status}) - ${error.response.statusText}`;
+        debugReason = `SERVER_ERROR (${error.response.status})`;
+      } else if (error.response?.status >= 400) {
+        console.log("🚨 [DEBUG] Erreur client détectée");
+        errorMsg = `Erreur client (${error.response.status}) - ${error.response.statusText}`;
+        debugReason = `CLIENT_ERROR (${error.response.status})`;
       } else if (error.response?.data?.detail) {
         console.log("📝 [DEBUG] Erreur avec détail du serveur");
         errorMsg = error.response.data.detail;
+        debugReason = 'SERVER_DETAIL_ERROR';
       } else if (error.message) {
         console.log("📝 [DEBUG] Erreur avec message standard");
         errorMsg = error.message;
+        debugReason = 'MESSAGE_ERROR';
       }
       
       console.log("🔔 [DEBUG] Message d'erreur final:", errorMsg);
-      toast.error(`Erreur: ${errorMsg}`, { id: 'build-progress' });
+      console.log("🎯 [DEBUG] Raison identifiée:", debugReason);
+      console.log("🔍 [DEBUG] Conseils de debug:");
+      console.log("  1. Vérifiez que le backend est démarré sur http://localhost:8001");
+      console.log("  2. Testez manuellement: curl -X GET http://localhost:8001/");
+      console.log("  3. Vérifiez les logs du backend: tail -f /var/log/supervisor/backend.*.log");
+      console.log("  4. Vérifiez la configuration réseau et les proxies");
+      console.log("=" * 80);
+      
+      toast.error(`Erreur: ${errorMsg} [${debugReason}]`, { id: 'build-progress' });
     } finally {
       console.log("🏁 [DEBUG] Nettoyage final...");
       setBuilding(false);
