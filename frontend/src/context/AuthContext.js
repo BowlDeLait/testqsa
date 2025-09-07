@@ -38,8 +38,25 @@ export const AuthProvider = ({ children }) => {
     // Make api instance globally available
     window.apiInstance = api;
     
-    // Add request interceptor to include token
+    // Add request interceptor to both axios instances
     const requestInterceptor = axios.interceptors.request.use(
+      (config) => {
+        console.log('📤 Envoi de requête axios global:', config.method?.toUpperCase(), config.url);
+        const token = localStorage.getItem('token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+          console.log('🔑 Token ajouté à la requête');
+        }
+        return config;
+      },
+      (error) => {
+        console.error('❌ Erreur intercepteur request:', error);
+        return Promise.reject(error);
+      }
+    );
+
+    // Add interceptor to dedicated api instance
+    const apiRequestInterceptor = api.interceptors.request.use(
       (config) => {
         console.log('📤 Envoi de requête:', config.method?.toUpperCase(), config.url);
         const token = localStorage.getItem('token');
