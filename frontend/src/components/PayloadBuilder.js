@@ -116,7 +116,8 @@ const PayloadBuilder = () => {
     }
   };
 
-  const ConfigSection = ({ title, icon: Icon, children }) => (
+  // Mémoriser le composant ConfigSection pour éviter les re-renders
+  const ConfigSection = useMemo(() => ({ title, icon: Icon, children }) => (
     <div className="discord-card">
       <div className="flex items-center mb-4">
         <Icon className="w-5 h-5 text-discord-blurple mr-2" />
@@ -124,7 +125,7 @@ const PayloadBuilder = () => {
       </div>
       {children}
     </div>
-  );
+  ), []);
 
   return (
     <div className="space-y-6 fade-in">
