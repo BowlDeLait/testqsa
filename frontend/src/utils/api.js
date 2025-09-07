@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 // Configuration de l'API centralisée
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '/api';
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '';
 
-console.log('🔧 Configuration API centralisée avec URL:', API_BASE_URL);
+console.log('🔧 Configuration API centralisée avec URL:', API_BASE_URL || 'URL relative (same origin)');
 
 // Créer une instance axios dédiée pour l'API
 const api = axios.create({
