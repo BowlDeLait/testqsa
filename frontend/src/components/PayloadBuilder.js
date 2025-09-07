@@ -59,10 +59,18 @@ const PayloadBuilder = () => {
   const buildPayload = async () => {
     if (!validateConfig()) return;
 
+    console.log("=" * 80);
+    console.log("🚀 [DEBUG FRONTEND] DÉBUT GÉNÉRATION PAYLOAD");
+    console.log("=" * 80);
+    console.log("⚙️ [DEBUG] Configuration actuelle:", JSON.stringify(config, null, 2));
+    console.log("🌐 [DEBUG] URL backend:", process.env.REACT_APP_BACKEND_URL);
+    console.log("🕐 [DEBUG] Timestamp:", new Date().toISOString());
+
     setBuilding(true);
     setBuildProgress(0);
 
     try {
+      console.log("📋 [DEBUG] Étapes de génération...");
       // Étapes de génération réalistes
       const steps = [
         'Validation de la configuration...',
@@ -74,20 +82,40 @@ const PayloadBuilder = () => {
       ];
 
       for (let i = 0; i < steps.length; i++) {
+        console.log(`📝 [DEBUG] Étape ${i + 1}/${steps.length}: ${steps[i]}`);
         toast.loading(steps[i], { id: 'build-progress' });
         setBuildProgress(((i + 1) / steps.length) * 100);
         await new Promise(resolve => setTimeout(resolve, 800));
       }
 
+      console.log("🔗 [DEBUG] Préparation de l'appel API...");
+      console.log("📤 [DEBUG] Données à envoyer:", JSON.stringify(config, null, 2));
+      
       // Appel à l'API backend pour générer le payload réel
-      console.log('🔧 Envoi de la configuration au backend...');
+      console.log('🔧 [DEBUG] Envoi de la configuration au backend...');
       toast.loading('Génération du payload sur le serveur...', { id: 'build-progress' });
       
+      console.log("📡 [DEBUG] Configuration axios avant requête:");
+      console.log("  - Base URL:", api.defaults.baseURL);
+      console.log("  - Timeout:", api.defaults.timeout);
+      console.log("  - Headers:", api.defaults.headers);
+      
+      console.log("🚀 [DEBUG] Lancement de la requête POST /api/payload/generate...");
+      const startTime = performance.now();
+      
       const response = await api.post('/api/payload/generate', config, {
-        timeout: 30000 // 30 seconds timeout
+        timeout: 30000, // 30 seconds timeout
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          console.log(`📤 [DEBUG] Upload progress: ${percentCompleted}%`);
+        }
       });
       
-      console.log('📦 Réponse du serveur:', response.data);
+      const endTime = performance.now();
+      console.log(`⏱️ [DEBUG] Requête terminée en ${endTime - startTime}ms`);
+      console.log("📥 [DEBUG] Status de réponse:", response.status);
+      console.log("📥 [DEBUG] Headers de réponse:", response.headers);
+      console.log('📦 [DEBUG] Réponse complète du serveur:', JSON.stringify(response.data, null, 2));
       
       if (response.data.success) {
         toast.loading('Téléchargement du payload...', { id: 'build-progress' });
