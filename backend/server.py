@@ -366,6 +366,15 @@ async def generate_payload(payload_config: dict):
         return response_data
         
     except Exception as e:
+        print("=" * 80)
+        print("❌ [DEBUG] ERREUR LORS DE LA GÉNÉRATION")
+        print("=" * 80)
+        print(f"❌ [DEBUG] Type d'erreur: {type(e).__name__}")
+        print(f"❌ [DEBUG] Message d'erreur: {str(e)}")
+        print(f"❌ [DEBUG] Trace complète: {str(e.__traceback__)}")
+        import traceback
+        print(f"❌ [DEBUG] Stack trace: {traceback.format_exc()}")
+        print("=" * 80)
         raise HTTPException(status_code=500, detail=f"Erreur lors de la génération: {str(e)}")
 
 @app.get("/api/payload/download/{payload_id}")
