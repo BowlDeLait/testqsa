@@ -20,26 +20,34 @@ export const AuthProvider = ({ children }) => {
 
   // Configure axios defaults
   useEffect(() => {
+    console.log('🔧 Configuration axios avec API_BASE_URL:', API_BASE_URL);
     axios.defaults.baseURL = API_BASE_URL;
     
     // Add request interceptor to include token
     const requestInterceptor = axios.interceptors.request.use(
       (config) => {
+        console.log('📤 Envoi de requête:', config.method?.toUpperCase(), config.url);
         const token = localStorage.getItem('token');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
+          console.log('🔑 Token ajouté à la requête');
         }
         return config;
       },
       (error) => {
+        console.error('❌ Erreur intercepteur request:', error);
         return Promise.reject(error);
       }
     );
 
     // Add response interceptor to handle auth errors
     const responseInterceptor = axios.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        console.log('📥 Réponse reçue:', response.status, response.config.url);
+        return response;
+      },
       (error) => {
+        console.error('❌ Erreur intercepteur response:', error);
         if (error.response?.status === 401) {
           localStorage.removeItem('token');
           setUser(null);
