@@ -23,12 +23,17 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('🔥 Soumission du formulaire de connexion', { username: formData.username });
     setIsLoading(true);
     
     const result = await login(formData.username, formData.password);
+    console.log('🔄 Résultat de la tentative de connexion:', result);
     
     if (result.success) {
+      console.log('✅ Connexion réussie, navigation vers /dashboard');
       navigate('/dashboard');
+    } else {
+      console.log('❌ Échec de la connexion:', result.error);
     }
     
     setIsLoading(false);
